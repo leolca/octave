@@ -92,11 +92,9 @@ function c = cconv (a, b, n)
   endif
 
   c = [];
-  for i = 0 : n - 1,
-    c(i + 1) = sum ( a .* flipud(circshift(b, -(i + 1)) ) );
-  end
+  c = ifft ( fft(a) .* fft(b) ) ;
 
-  if (flgcolumn)
+  if (!flgcolumn)
     c = c';
   endif
 endfunction
@@ -110,7 +108,7 @@ endfunction
 %!assert (cconv(x, [1 1]), [1, 3, 5, 7, 9, 5])
 %!assert (cconv(x, [1 1],3), [8, 12, 10])
 
-%!assert (cconv([2 1 2 1], [1 2 3 4]), [2 5 10 16 12 11 4])
+%!assert (cconv([2 1 2 1], [1 2 3 4]), [2 5 10 16 12 11 4], 1E-14)
 %!assert (cconv([2 1 2 1], [1 2 3 4], 4), [14 16 14 16])
 %!assert (cconv([2 1 2 1], [1 2 3 4], 3), [22 17 21])
 %!assert (cconv([2 1 2 1], [1 2 3 4], 2), [28 32])
