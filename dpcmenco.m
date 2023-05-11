@@ -52,9 +52,7 @@ function [indx, quants, distor] = dpcmenco (sig, codebook, partition, predictor)
     y(i) = y(max (i - length (predictor) + 1, 1):i) * predictor(end:-1:max (end-i+1, 1))'; # convolution
     e(i) = sig(i) - y(i); # error
     [indx(i), quants(i)] = quantiz (e(i), partition, codebook); # quantize the error
-    ## predictor
-    yp = y(max (i - length (predictor) + 1, 1):i) * predictor(end:-1:max (end-i+1, 1))'; # convolution
-    y(i) = yp + quants(i); # update prediction value
+    y(i) +=  quants(i); # update prediction value
   endfor
 
   ## compute distortion
@@ -65,9 +63,36 @@ function [indx, quants, distor] = dpcmenco (sig, codebook, partition, predictor)
 
 endfunction
 
+%!demo
+%! predictor = [0 1];
+%! nbits = 4;
+%! delta = 2^(-nbits+1);
+%! codebook = [-1+delta/2 : delta : 1-delta/2];
+%! partition = (codebook(1:end-1) + codebook(2:end))/2;
+%! t = linspace (0, 2*pi, 128);
+%! x = sawtooth (2*t, 0.25);
+%! [idx, xq, distor] = dpcmenco (x, codebook, partition, predictor);
+%! xr = dpcmdeco (idx, codebook, predictor);
+%! plot (t, x, 'k--','linewidth',1, t, xr, 'b-','linewidth',1);
+%! xlim ([0 2*pi]);
+%! xlabel ('t'); ylabel ('x(t)');
+%! legend ('original', 'dpcm');
+%! title ( sprintf ('distortion = %.3f', distor) );
+
 %% Test input validation
 %!error dpcmenco ()
 %!error dpcmenco (1)
 %!error dpcmenco (1, 2)
 %!error dpcmenco (1, 2, 3)
 %!error dpcmenco (1, 2, 3, 4, 5)
+
+%!test
+%! predictor = [0 1];
+%! partition = [-0.5, 0, 0.5];
+%! codebook  = [-1, -0.25, 0.25, 1];
+%! t = [0:pi/2:2*pi];
+%! x = sawtooth(2*t);
+%! [idx, qx, distor] = dpcmenco(x, codebook, partition, predictor);
+%! assert (idx, [0, 3, 0, 3, 0])
+%! assert (qx, [-1, 1, -1, 1, -1])
+%! assert (distor, 0)
