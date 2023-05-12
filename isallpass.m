@@ -51,7 +51,7 @@ function flag = isallpass (b, a)
     endif
 
     if nargin == 2 && !all(size(b) == size(a)),
-        flag = 0;
+        flag = false;
 	return;
     endif
 
