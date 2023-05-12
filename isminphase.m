@@ -15,7 +15,7 @@
 ## <https://www.gnu.org/licenses/>.
 
 ## -*- texinfo -*-
-## @deftypefn  {Function File} {@var{L} = } isminphase. (@var{b}, @var{a})
+## @deftypefn  {Function File} {@var{L} = } isminphase (@var{b}, @var{a})
 ## @deftypefnx {Function File} {@var{L} = } isminphase (@var{sos})
 ##
 ## Determine whether a digital filter is minimum phase. The filter might be defined 
@@ -37,7 +37,7 @@ function flag = isminphase (b, a)
 	print_usage;
     endif
 
-    if (nargin == 2 && ( ! isrow(a) || ! isrow(b) ))
+    if (nargin == 2 && ( ! isrow (a) || ! isrow (b) ))
         error ( "coefficient array should be a row vector" );
     endif
 
@@ -45,19 +45,19 @@ function flag = isminphase (b, a)
         a = 1;
     endif
 
-    if (nargin == 2 && isrow(a) && isrow (b)) || (nargin == 1 && isrow (b))
+    if (nargin == 2 && isrow (a) && isrow (b)) || (nargin == 1 && isrow (b))
         zm = abs (roots (b));
 	pm = abs (roots (a));
 	flag = (all (zm < 1) || isempty (zm)) && (all (pm < 1) || isempty (pm));
-    elseif (nargin == 1 && all(size(b)>[1 1]))
-        [b, a] = sos2tf(b);
-        flag = isminphase(b, a);
+    elseif (nargin == 1 && all(size (b) > [1 1]))
+        [b, a] = sos2tf (b);
+        flag = isminphase (b, a);
     endif
 
 endfunction
 
 %!demo
-%! f = isminphase(b, a)
+%! f = isminphase (b, a)
 
 %! ## test input validation
 %!error n = isminphase ()
@@ -68,7 +68,7 @@ endfunction
 %!error n = isminphase (1, [1:10]')
 %!error n = isminphase ([1:10]', [1:10]')
 %!error n = isminphase (1:10, 1:10, 1:10)
-%!error n = isminphase (ones(3), ones(3))
+%!error n = isminphase (ones (3), ones (3))
 
 %!test
 %! b = [3 1];
@@ -87,7 +87,7 @@ endfunction
 %! assert (f, false)
 
 %!test
-%! b = 1.25^2 * conv( conv( conv([1 -0.9*e^(-j*0.6*pi)], [1 -0.9*e^(j*0.6*pi)]), [1 -0.8*e^(-j*0.8*pi)] ), [1 -0.8*e^(j*0.8*pi)] );
+%! b = 1.25^2 * conv (conv (conv ([1 -0.9*e^(-j*0.6*pi)], [1 -0.9*e^(j*0.6*pi)]), [1 -0.8*e^(-j*0.8*pi)]), [1 -0.8*e^(j*0.8*pi)]);
 %! a = 1;
-%! f = isminphase(b, a);
+%! f = isminphase (b, a);
 %! assert (f, true)

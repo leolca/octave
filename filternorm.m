@@ -32,27 +32,27 @@
 ## @end deftypefn
 
 function L = filternorm (b, a, pnorm, tol)
-    if (nargin < 2 || nargin > 4 || ! isrow (b) || ! isrow(a)) 
+    if (nargin < 2 || nargin > 4 || ! isrow (b) || ! isrow (a)) 
 	print_usage;
     endif
 
-    if nargin < 3, pnorm=2; endif
-    if pnorm != 2 && pnorm != Inf,
+    if nargin < 3, pnorm = 2; endif
+    if pnorm != 2 && pnorm != Inf
         error ("pnorm should be either 2 or Inf")
     endif
 
-    if nargin == 2 || pnorm == 2, 
+    if nargin == 2 || pnorm == 2 
         % Parseval's theorem states that the L2-norm of a filter with frequency 
 	% response H(e^{j\omega}) is the square-root of the sum of the squares 
 	% of its filter impulse response (the energy of the impulse response).
-        [h, _] = impz(b,a);
-	L = normp (h, pnorm); % L = sqrt ( sum ( h.^2 ) );
-    elseif pnorm == Inf, 
+        [h, _] = impz (b,a);
+	L = sqrt (sum (h.^2)); % L = normp (h, pnorm); 
+    elseif pnorm == Inf
         % the norm in L-infinity is simply the maximum of the frequency response: 
         % ||H||_{\infty} = \max_{0 \leq \omega \leq \pi} { |H(e^{j\omega})|} 
         [H, W] = freqz (b, a, 1024);
-	L, _ = max ( abs (H) ):
-    else,
+	L = max (abs (H));
+    else
         error( "filternorm: pnorm must be either 2 or Inf" );
     endif
 
@@ -86,5 +86,5 @@ endfunction
 
 %!test
 %! [b, a] = butter (5, .5);
-%! Linf = filternorm (b, a, Inf)
+%! Linf = filternorm (b, a, Inf);
 %! assert (Linf, 1, 1e-8);

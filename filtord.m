@@ -31,7 +31,7 @@
 ## @end deftypefn
 
 function n = filtord (b, a)
-    if (nargin < 1 || nargin > 2) || ( nargin == 2 && ( ! isrow (b) || ! isrow(a) ) ) 
+    if (nargin < 1 || nargin > 2) || ( nargin == 2 && ( ! isrow (b) || ! isrow (a) ) ) 
 	print_usage;
     endif
 
@@ -40,8 +40,8 @@ function n = filtord (b, a)
     endif
 
     if isrow (b)
-	n = max ( length(b)-1, length(a)-1 );
-    else, 
+	n = max ( length (b)-1, length (a)-1 );
+    else
 	n = (size (b, 1) - 1) * 2 + max (sum (b(end,1:3) != 0) , sum (b(end,4:6) != 0)) - 1;
     endif
 
@@ -68,7 +68,8 @@ endfunction
 %!error n = filtord (ones(3), ones(3))
 
 %!test
-%! b = [1 0 0]; a = [1 0 0 0];
+%! b = [1 0 0]; 
+%! a = [1 0 0 0];
 %! n = filtord (b, a);
 %! assert (n, 3, 1e-6)
 
