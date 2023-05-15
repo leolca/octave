@@ -17,10 +17,13 @@
 ## -*- texinfo -*-
 ## @deftypefn  {Function File} {@var{L} = } isminphase (@var{b}, @var{a})
 ## @deftypefnx {Function File} {@var{L} = } isminphase (@var{sos})
+## @deftypefnx {Function File} {@var{L} = } isminphase (@dots{}, @var{tol})
 ##
 ## Determine whether a digital filter is minimum phase. The filter might be defined 
 ## by the numerator coefficients, @var{b}, and the denominator coefficients, 
 ## @var{a}, or, alternatively, by a matrix of second-order sections, @var{sos}. 
+## A toleranve @var{tol} might be given to define when two numbers are close enough 
+## to be considered equal.
 ##
 ## Example:
 ## @example
@@ -32,26 +35,26 @@
 ## 3rd edition, Pearson, 2009.
 ## @end deftypefn
 
-function flag = isminphase (b, a)
-    if (nargin < 1 || nargin > 2 )
+function flag = isminphase (b, a, tol)
+    if (nargin < 1 || nargin > 3 || (nargin == 2 && isrow (b)))
 	print_usage;
     endif
 
-    if (nargin == 2 && ( ! isrow (a) || ! isrow (b) ))
-        error ( "coefficient array should be a row vector" );
+    if (nargin == 2 && ! isrow (b))
+        tol = a;
     endif
 
-    if (nargin == 1 && isrow (b))
-        a = 1;
-    endif
+    if (nargin == 1 && isrow (b)), a = 1; endif
+
+    if nargin < 3, tol = eps^(3/4); endif
 
     if (nargin == 2 && isrow (a) && isrow (b)) || (nargin == 1 && isrow (b))
         zm = abs (roots (b));
 	pm = abs (roots (a));
-	flag = (all (zm < 1) || isempty (zm)) && (all (pm < 1) || isempty (pm));
+	flag = (all (zm < 1 - tol) || isempty (zm)) && (all (pm < 1 - tol) || isempty (pm));
     elseif (nargin == 1 && all(size (b) > [1 1]))
         [b, a] = sos2tf (b);
-        flag = isminphase (b, a);
+        flag = isminphase (b, a, tol);
     endif
 
 endfunction
