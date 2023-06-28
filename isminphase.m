@@ -36,7 +36,7 @@
 ## @end deftypefn
 
 function flag = isminphase (b, a, tol)
-    if (nargin < 1 || nargin > 3 || (nargin == 2 && isrow (b)))
+    if (nargin < 1 || nargin > 3 || (nargin == 2 && ! isrow (b)) || (length (a) > 1 && ! isrow (a)) || (length (b) > 1 && ! isrow (b)) || (nargin == 3 && ! isscalar (tol)) )
 	print_usage;
     endif
 
@@ -64,7 +64,6 @@ endfunction
 
 %! ## test input validation
 %!error n = isminphase ()
-%!error n = isminphase (1, 1, 1)
 %!error n = isminphase (1, 1, 1, 1)
 %!error n = isminphase (1, 1, 1, 1, 1)
 %!error n = isminphase ([1:10]', 1)
