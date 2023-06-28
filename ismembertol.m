@@ -48,18 +48,17 @@
 ## @end group
 ## @end example
 ##
-## The inputs @var{a} and @var{s} may also be cell arrays.
-##
 ## Optional argument pair @var{name} and @var{value} might be given.
 ## The @var{value} is either @qcode{true} or @qcode{false} and the @var{name}
 ## might be given chosen from the following options:
-##   - @qcode{"ByRows"}:
-##   - @qcode{"OutputAllIndices"}:
-##   - @qcode{"DataScale"}:
-##
-## @qcode{"rows"} is given then compare rows
-## in @var{a} with rows in @var{s}.  The inputs must be 2-D matrices with the
-## same number of columns to use this option.
+##   - @qcode{"ByRows"}: compares the rows of @var{a} and @var{s} by considering 
+##     each column separately. Two rows, @var{u} and @var{v}, are within tolerance 
+##     @qcode{if all(abs(u-v) <= tol*max(abs([a;s])))}.
+##   - @qcode{"OutputAllIndices"}: returns a cell array containing the indices for 
+##     all elements in @var{s} that are within tolerance of the corresponding value 
+##     in @var{s}. 
+##   - @qcode{"DataScale"}: change the scale in the tolerance test to 
+##     @qcode{abs(u-v) <= tol*DS}.
 ##
 ## Example:
 ## @example
@@ -92,7 +91,7 @@ function [tf, s_idx] = ismembertol (a, s, varargin)
     print_usage ();
   endif
 
-  if nargin > 3 && ! all (cellfun(@(x) ischar(x) || islogical(x) || isnumeric(x), {varargin{2:end}}))
+  if nargin > 3 && (! all (cellfun(@(x) ischar(x) || islogical(x) || isnumeric(x), {varargin{2:end}})) || all (cellfun(@(x) isnumeric(x), {varargin{1:2}})))
     print_usage ();
   endif
 
@@ -106,17 +105,13 @@ function [tf, s_idx] = ismembertol (a, s, varargin)
   data_scale = (! isempty (data_scale_idx) && isnumeric (varargin{data_scale_idx+1}) );
   if data_scale
     DS = varargin{data_scale_idx+1};
-    %if any (isinf (DS))
-    %   idx = find( ! isinf (DS) == 1);
-    %   r = reshape (a(:,idx), [], 1);
-    %   DS = max ( abs ([r; s(:)]));
-    %endif
   else
     DS = max (abs ([a(:);s(:)]));
   endif
 
   if (! by_rows)
     disp ('not by rows');
+    sa = size (a);
     s = s(:);
     a = a(:);
     ## Check sort status, because we expect the array will often be sorted.
@@ -146,6 +141,8 @@ function [tf, s_idx] = ismembertol (a, s, varargin)
       if (! isempty (is))
         s_idx(tf) = is(s_idx(tf));
       endif
+      s_idx = reshape (s_idx, sa);
+      tf = reshape (tf, sa);
     else # all_indices
       disp ('all indices');
       disp ([s_i'; s_j']);
@@ -179,7 +176,7 @@ function [tf, s_idx] = ismembertol (a, s, varargin)
         tf = all (bsxfun (@eq, a, s), 2);
         s_idx = double (tf);
       else
-        % Two rows, u and v, are within tolerance if all(abs(u-v) <= tol*max(abs([A;B]))).
+        # Two rows, u and v, are within tolerance if all(abs(u-v) <= tol*max(abs([A;B]))).
         na = rows (a);
 	if ! all_indices
           s_idx = zeros (na, 1);
@@ -203,9 +200,6 @@ function [tf, s_idx] = ismembertol (a, s, varargin)
 	else
 	  tf = cellfun(@(x) ! isempty (x) && all (x(:)!=0), s_idx);
 	endif
-        #if (! isempty (is))
-        #  s_idx(tf) = is(s_idx(tf));
-        #endif
       endif
     endif
   endif
@@ -237,23 +231,23 @@ endfunction
 
 %!test
 %! [result, s_idx] = ismembertol ([], [1, 2]);
-%! assert (result, logical (zeros (0, 1)));
-%! assert (s_idx, zeros (0, 1));
+%! assert (result, logical ( [] ));
+%! assert (s_idx, []);
 
 %!test
 %! [result, s_idx] = ismembertol ([1 2 3 4 5], [3]);
-%! assert (result, logical ([0 0 1 0 0]'));
-%! assert (s_idx , [0 0 1 0 0]');
+%! assert (result, logical ([0 0 1 0 0]));
+%! assert (s_idx , [0 0 1 0 0]);
 
 %!test
 %! [result, s_idx] = ismembertol ([1 6], [1 2 3 4 5 1 6 1]);
-%! assert (result, [true; true]);
+%! assert (result, [true true]);
 %! assert (s_idx(2), 7);
 
 %!test
 %! [result, s_idx] = ismembertol ([3,10,1], [0,1,2,3,4,5,6,7,8,9]);
-%! assert (result, [true; false; true]);
-%! assert (s_idx, [4; 0; 2]);
+%! assert (result, [true false true]);
+%! assert (s_idx, [4 0 2]);
 
 %!test
 %! [result, s_idx] = ismembertol ([1:3; 5:7; 4:6], [0:2; 1:3; 2:4; 3:5; 4:6], "ByRows", true);
@@ -272,18 +266,18 @@ endfunction
 
 %!test 
 %! [tf, s_idx] = ismembertol ([5, 4-3j, 3+4j], [5, 4-3j, 3+4j]);
-%! assert (tf, logical ([1; 1; 1]));
-%! assert (s_idx, [1; 2; 3]);
+%! assert (tf, logical ([1 1 1]));
+%! assert (s_idx, [1 2 3]);
 
 %!test
 %! [tf, s_idx] = ismembertol ([5, 4-3j, 3+4j], 5);
-%! assert (tf, logical ([1; 0; 0]));
-%! assert (s_idx, [1; 0; 0]);
+%! assert (tf, logical ([1 0 0]));
+%! assert (s_idx, [1 0 0]);
 
 %!test
 %! [tf, s_idx] = ismembertol ([5, 5, 5], 4-3j);
-%! assert (tf, logical ([0; 0; 0]));
-%! assert (s_idx, [0; 0; 0]);
+%! assert (tf, logical ([0 0 0]));
+%! assert (s_idx, [0 0 0]);
 
 %!test
 %! [tf, s_idx] = ismembertol ([5, 4-3j, 3+4j; 5, 4-3j, 3+4j], [5, 5, 5], "ByRows", true);
@@ -297,9 +291,9 @@ endfunction
 
 %!test
 %! tf = ismembertol ([5, 4-3j, 3+4j], 5);
-%! assert (tf, logical ([1; 0; 0]));
+%! assert (tf, logical ([1 0 0]));
 %! [~, s_idx] = ismembertol ([5, 4-3j, 3+4j], 5);
-%! assert (s_idx, [1; 0; 0]);
+%! assert (s_idx, [1 0 0]);
 
 %!test
 %! [tf, s_idx] = ismembertol (-1-1j, [-1-1j, -1+3j, -1+1j]);
@@ -308,13 +302,13 @@ endfunction
 
 %!test
 %! [tf, s_idx] = ismembertol ([0.9 1.9 3.1 4.2], [1 2 3], 0.1);
-%! assert (tf, [true; true; true; false]);
-%! assert (s_idx, [1; 2; 3; 0]);
+%! assert (tf, [true true true false]);
+%! assert (s_idx, [1 2 3 0]);
 
 %!test
 %! [tf, s_idx] = ismembertol ([1:10] + 0.01 * (rand (1,10) - 0.5), [1:10], 0.01);
-%! assert (tf, logical ([1:10]'));
-%! assert (s_idx, [1:10]');
+%! assert (tf, logical ([1:10]));
+%! assert (s_idx, [1:10]);
 
 ## Test input validation
 %!error <Invalid call> ismembertol ()
