@@ -64,17 +64,17 @@ function [indx, quants, distor] = dpcmenco (sig, codebook, partition, predictor)
 endfunction
 
 %!function y = my_sawtooth (t, width)
-%!  ## sawtooth function, so not to require the signal package for the demo and test
-%!    if (nargin == 1)
-%!      width = 1;
+%!  ## sawtooth function, so not to require the signal package for the test
+%!  if (nargin == 1)
+%!    width = 1;
 %!  endif
 %!  t = mod (t / (2 * pi), 1);
 %!  y = zeros (size (t));
 %!  if (width != 0)
-%!      y (t < width) = 2 * t (t < width) / width - 1;
+%!    y(t < width) = 2 * t(t < width) / width - 1;
 %!  endif
 %!  if (width != 1)
-%!    y( t >= width) = -2 * (t (t >= width) - width) / (1 - width) + 1;
+%!    y(t >= width) = -2 * (t(t >= width) - width) / (1 - width) + 1;
 %!  endif
 %!endfunction
 
@@ -85,7 +85,12 @@ endfunction
 %! codebook = [-1+delta/2 : delta : 1-delta/2];
 %! partition = (codebook(1:end-1) + codebook(2:end))/2;
 %! t = linspace (0, 2*pi, 128);
-%! x = my_sawtooth (2*t, 0.25);
+%! t_aux = 2*t;
+%! width = 0.25;
+%! t_aux = mod (t_aux / (2 * pi), 1);
+%! x = zeros (size (t_aux));
+%! x(t_aux < width) = 2 * t_aux(t_aux < width) / width - 1;
+%! x(t_aux >= width) = -2 * (t_aux(t_aux >= width) - width) / (1 - width) + 1;
 %! [idx, xq, distor] = dpcmenco (x, codebook, partition, predictor);
 %! xr = dpcmdeco (idx, codebook, predictor);
 %! plot (t, x, 'k--','linewidth',1, t, xr, 'b-','linewidth',1);

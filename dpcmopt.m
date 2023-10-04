@@ -59,7 +59,7 @@ function [predictor, partition, codebook] = dpcmopt (training_set, ord, cb)
   ncorr_tr = corr_tr(L:L+ord+1) ./ (L - [1:ord+2]); # normalize
   ## use Levinson-Durbin recursion to solve the Yule-Walker equations
   a = levinson (ncorr_tr, ord);
-  predictor = [0 - a(2:end)];
+  predictor = [0 -a(2:end)];
 
   if (nargin > 2 && nargout > 1)
     ## predictive error

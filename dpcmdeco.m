@@ -33,7 +33,8 @@ function sig = dpcmdeco (indx, codebook, predictor)
     print_usage ();
   endif
 
-  quants = codebook(indx+1);
+  codebook = codebook(:);
+  quants = codebook(indx+1)';
   sig = zeros (size (quants));
   for i = 1 : length (sig)
     ## signal prediction (convolution of signal and predictor coefficients) + quantization error
